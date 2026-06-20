@@ -10,7 +10,7 @@
     "@testing-library/user-event": "^13.5.0",
     "antd": "^5.1.6",
     "antd-img-crop": "^4.7.0",
-    "axios": "^0.27.2",
+    "axios": "^1.15.2",
     "cra-template": "1.2.0",
     "dayjs": "^1.11.7",
     "jwt-decode": "^3.1.2",
@@ -23,7 +23,8 @@
     "redux-persist": "^6.0.0",
     "redux-thunk": "^2.4.2",
     "uuid": "^9.0.0",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "ws": "^8.20.0"
   },
   "scripts": {
     "start": "set PORT=3033 && react-scripts start",

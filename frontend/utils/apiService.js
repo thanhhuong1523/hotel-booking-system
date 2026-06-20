@@ -8,13 +8,10 @@
  */
 
 import axios from 'axios';
-import getConfig from 'next/config';
 import { getSessionToken, removeSessionAndLogoutUser } from './authentication';
 
-const { publicRuntimeConfig } = getConfig();
-
 const ApiService = axios.create({
-  baseURL: publicRuntimeConfig.API_BASE_URL
+  baseURL: process.env.NEXT_PUBLIC_API_URL
 });
 
 /**

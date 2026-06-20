@@ -9,7 +9,6 @@
 
 import { Button } from 'antd';
 import axios from 'axios';
-import getConfig from 'next/config';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
@@ -22,8 +21,6 @@ import OrderPlaceModal from '../../components/utilities/OrderPlaceModal';
 import RoomReviewList from '../../components/utilities/RoomReviewList';
 import { getSessionToken, getSessionUser } from '../../utils/authentication';
 import notificationWithIcon from '../../utils/notification';
-
-const { publicRuntimeConfig } = getConfig();
 
 function RoomPreview(props) {
   const [bookingModal, setBookingModal] = useState({ open: false, roomId: null });
@@ -148,7 +145,7 @@ export async function getServerSideProps(ctx) {
   try {
     // Fetch data from the server-side API
     const response = await axios.get(
-      `${publicRuntimeConfig.API_BASE_URL}/api/v1/get-room-by-id-or-slug-name/${ctx.query.slug}`
+      `${process.env.NEXT_PUBLIC_API_URL}/api/v1/get-room-by-id-or-slug-name/${ctx.query.slug}`
     );
     const room = response?.data?.result;
 
