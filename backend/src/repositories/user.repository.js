@@ -6,60 +6,30 @@ class UserRepository extends BaseRepository {
     super(User);
   }
 
-  /**
-   * Find user by email with hotel scope
-   */
-  async findByEmail(email, hotelId = null) {
-    const query = { email };
-    if (hotelId) query.hotelId = hotelId;
-    return this.model.findOne(query).select('+password');
+  async findByEmail(email) {
+    return this.model.findOne({ email }).select('+password');
   }
 
-  /**
-   * Find user by username with hotel scope
-   */
-  async findByUsername(username, hotelId = null) {
-    const query = { userName: username };
-    if (hotelId) query.hotelId = hotelId;
-    return this.model.findOne(query);
+  async findByUsername(username) {
+    return this.model.findOne({ userName: username });
   }
 
-  /**
-   * Find user by phone
-   */
-  async findByPhone(phone, hotelId = null) {
-    const query = { phone };
-    if (hotelId) query.hotelId = hotelId;
-    return this.model.findOne(query);
+  async findByPhone(phone) {
+    return this.model.findOne({ phone });
   }
 
-  /**
-   * Find user by ID
-   */
   async findById(id) {
-    return this.model.findById(id).populate('hotelId', 'name'); // sau này sẽ có hotel model
+    return this.model.findById(id);
   }
 
-  /**
-   * Find user with password
-   */
   async findWithPassword(userId) {
     return this.model.findById(userId).select('+password');
   }
 
-  /**
-   * Update user status
-   */
   async updateStatus(id, status) {
-    return this.update(id, {
-      status,
-      updatedAt: Date.now()
-    });
+    return this.update(id, { status, updatedAt: Date.now() });
   }
 
-  /**
-   * Get user for reset password
-   */
   async getResetPasswordUser(token) {
     const resetPasswordToken = crypto
       .createHash('sha256')
@@ -72,9 +42,6 @@ class UserRepository extends BaseRepository {
     });
   }
 
-  /**
-   * Get user for email verification
-   */
   async getEmailVerificationUser(token) {
     const emailVerificationToken = crypto
       .createHash('sha256')
@@ -87,12 +54,7 @@ class UserRepository extends BaseRepository {
     });
   }
 
-  /**
-   * Get users list with hotel filter (for admin)
-   */
-  async getUsersList(query = {}, hotelId = null) {
-    const filter = { ...query };
-    if (hotelId) filter.hotelId = hotelId;
+  async getUsersList(filter = {}) {
     return this.find(filter);
   }
 }

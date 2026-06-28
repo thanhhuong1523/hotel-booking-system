@@ -4,7 +4,6 @@ const { errorResponse } = require('../configs/app.response');
 const loginResponse = require('../configs/login.response');
 
 class AuthController {
-  // Register
   async register(req, res) {
     try {
       const result = await authService.register(req);
@@ -14,7 +13,6 @@ class AuthController {
     }
   }
 
-  // Login
   async loginUser(req, res) {
     try {
       const user = await authService.login(req);
@@ -24,46 +22,35 @@ class AuthController {
     }
   }
 
-  // Logout
   async logoutUser(req, res) {
     try {
       const { user } = req;
-
       if (!user) {
         return res.status(404).json(errorResponse(4, 'UNKNOWN ACCESS', 'Unauthorized access. Please login to continue'));
       }
 
       const result = await authService.logout(user._id);
-
-      // Clear cookie
       res.clearCookie('AccessToken');
-
       res.status(200).json(result);
     } catch (error) {
       res.status(error.status || 500).json(error.response || errorResponse(2, 'SERVER SIDE ERROR', error));
     }
   }
 
-  // Forgot Password
   async forgotPassword(req, res) {
     try {
       const { email } = req.body;
-      const { hotelId } = req.body || {};
-
-      const data = await authService.forgotPassword(email, hotelId);
-      // Gọi sendEmail (giữ nguyên behavior cũ)
+      const data = await authService.forgotPassword(email);
       require('../configs/send.mail')(res, data.user, data.url, data.subjects, data.message, data.title);
     } catch (error) {
       res.status(error.status || 500).json(error.response || errorResponse(2, 'SERVER SIDE ERROR', error));
     }
   }
 
-  // Reset Password
   async resetPassword(req, res) {
     try {
       const { token } = req.params;
       const { password, confirmPassword } = req.body;
-
       const result = await authService.resetPassword(token, password, confirmPassword);
       res.status(200).json(result);
     } catch (error) {
@@ -71,15 +58,11 @@ class AuthController {
     }
   }
 
-  // Change Password
   async changePassword(req, res) {
     try {
       const { user } = req;
       const { oldPassword, newPassword } = req.body;
-
-      if (!user) {
-        return res.status(404).json(errorResponse(4, 'UNKNOWN ACCESS', 'User does not exist'));
-      }
+      if (!user) return res.status(404).json(errorResponse(4, 'UNKNOWN ACCESS', 'User does not exist'));
 
       const result = await authService.changePassword(user._id, oldPassword, newPassword);
       res.status(200).json(result);
@@ -88,13 +71,10 @@ class AuthController {
     }
   }
 
-  // Send Email Verification
   async sendEmailVerificationLink(req, res) {
     try {
       const { user } = req;
-      if (!user) {
-        return res.status(404).json(errorResponse(4, 'UNKNOWN ACCESS', 'User does not exist'));
-      }
+      if (!user) return res.status(404).json(errorResponse(4, 'UNKNOWN ACCESS', 'User does not exist'));
 
       const data = await authService.sendEmailVerificationLink(user);
       require('../configs/send.mail')(res, data.user, data.url, data.subjects, data.message, data.title);
@@ -103,7 +83,6 @@ class AuthController {
     }
   }
 
-  // Email Verification
   async emailVerification(req, res) {
     try {
       const { token } = req.params;
@@ -114,12 +93,10 @@ class AuthController {
     }
   }
 
-  // Refresh Token
   async refreshToken(req, res) {
     try {
       const { user } = req;
       const result = await authService.refreshToken(user);
-
       const options = {
         expires: new Date(Date.now() + process.env.JWT_TOKEN_COOKIE_EXPIRES * 24 * 60 * 60 * 1000),
         httpOnly: true

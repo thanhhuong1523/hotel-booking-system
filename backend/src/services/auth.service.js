@@ -6,19 +6,19 @@ const userRepository = require('../repositories/user.repository');
 
 class AuthService {
   async register(req) {
-    const { userName, fullName, email, phone, password, dob, address, gender, role, hotelId } = req.body;
+    const { userName, fullName, email, phone, password, dob, address, gender, role } = req.body;
     const { file } = req;
 
     try {
-      if (!userName || !fullName || !email || !password || !dob || !address || !hotelId) {
+      if (!userName || !fullName || !email || !password || !dob || !address) {
         this._deleteUploadFile(file);
         throw { status: 400, response: errorResponse(1, 'FAILED', 'Please enter all required fields') };
       }
 
       const [existedUsername, existedEmail, existedPhone] = await Promise.all([
-        userRepository.findByUsername(userName, hotelId),
-        userRepository.findByEmail(email, hotelId),
-        phone ? userRepository.findByPhone(phone, hotelId) : null
+        userRepository.findByUsername(userName),
+        userRepository.findByEmail(email),
+        phone ? userRepository.findByPhone(phone) : null
       ]);
 
       if (existedUsername) {
@@ -37,7 +37,7 @@ class AuthService {
       const avatar = file ? `/uploads/users/${file.filename}` : '/avatar.png';
 
       const user = await userRepository.create({
-        hotelId, userName, fullName, email, phone, password, avatar, gender, dob, address, role: role || 'user'
+        userName, fullName, email, phone, password, avatar, gender, dob, address, role: role || 'user'
       });
 
       return successResponse(0, 'SUCCESS', 'User registered successfully', {
@@ -55,13 +55,12 @@ class AuthService {
   async login(req) {
     const { email, password } = req.body;
     const { loginType } = req.query;
-    const { hotelId } = req.body || {};
 
     if (!email || !password) {
       throw { status: 400, response: errorResponse(1, 'FAILED', 'Please enter email and password') };
     }
 
-    const user = await userRepository.findByEmail(email, hotelId);
+    const user = await userRepository.findByEmail(email);
 
     if (!user) {
       throw { status: 404, response: errorResponse(4, 'UNKNOWN ACCESS', 'Invalid email or password') };
@@ -92,10 +91,11 @@ class AuthService {
     return successResponse(0, 'SUCCESS', 'User logged out successful');
   }
 
-  // Các method khác giữ nguyên như phiên bản trước
-  async forgotPassword(email, hotelId = null) {
-    const user = await userRepository.findByEmail(email, hotelId);
-    if (!user) throw { status: 404, response: errorResponse(4, 'UNKNOWN ACCESS', 'User does not exist') };
+  async forgotPassword(email) {
+    const user = await userRepository.findByEmail(email);
+    if (!user) {
+      throw { status: 404, response: errorResponse(4, 'UNKNOWN ACCESS', 'User does not exist') };
+    }
 
     const resetToken = user.getResetPasswordToken();
     await user.save({ validateBeforeSave: false });
@@ -108,6 +108,7 @@ class AuthService {
     if (password !== confirmPassword) {
       throw { status: 400, response: errorResponse(1, 'FAILED', 'Password and Confirm password does not match') };
     }
+
     const user = await userRepository.getResetPasswordUser(token);
     if (!user) {
       throw { status: 404, response: errorResponse(4, 'UNKNOWN ACCESS', 'Reset Password Token is invalid or has been expired') };
@@ -139,6 +140,7 @@ class AuthService {
     if (user.verified) {
       throw { status: 400, response: errorResponse(1, 'FAILED', 'Ops! Your mail already verified') };
     }
+
     const verificationToken = user.getEmailVerificationToken();
     await user.save({ validateBeforeSave: false });
 

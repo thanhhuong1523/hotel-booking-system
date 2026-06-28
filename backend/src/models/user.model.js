@@ -1,12 +1,3 @@
-/**
- * @name Hotel Room Booking System
- * @author Md. Samiur Rahman (Mukul)
- * @description Hotel Room Booking and Management System Software ~ Developed By Md. Samiur Rahman (Mukul)
- * @copyright ©2023 ― Md. Samiur Rahman (Mukul). All rights reserved.
- * @version v0.0.1
- *
- */
-
 const mongoose = require('mongoose');
 const crypto = require('crypto');
 const validator = require('validator');
@@ -14,28 +5,24 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const usersSchema = new mongoose.Schema({
-  hotelId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Hotel',
-    required: [true, 'Hotel ID is required'],
-    index: true
-  },
   userName: {
     type: String,
     trim: true,
     unique: true,
     lowercase: true,
-    required: [true, 'User name filed is required']
+    required: [true, 'User name field is required'],
+    index: true
   },
   fullName: {
     type: String,
-    required: [true, 'Full name filed is required']
+    required: [true, 'Full name field is required']
   },
   email: {
     type: String,
     unique: true,
-    required: [true, 'Email filed is required'],
-    validate: [validator.isEmail, 'Please enter a valid email address']
+    required: [true, 'Email field is required'],
+    validate: [validator.isEmail, 'Please enter a valid email address'],
+    index: true
   },
   phone: {
     type: String,
@@ -44,7 +31,7 @@ const usersSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: [true, 'Password filed is required'],
+    required: [true, 'Password field is required'],
     minlength: [6, 'Password must be at least 6 characters'],
     select: false
   },
@@ -58,7 +45,7 @@ const usersSchema = new mongoose.Schema({
   },
   dob: {
     type: Date,
-    required: [validator.isDate, 'Date of birth filed is required']
+    required: [true, 'Date of birth field is required']
   },
   address: {
     type: String,
@@ -102,21 +89,13 @@ usersSchema.pre('save', function (next) {
   next();
 });
 
-// Replace spaces with dashes in userName before saving
-usersSchema.pre('save', function (next) {
-  if (this.userName) {
-    this.userName = this.userName.replace(/\s/g, '-');
-  }
-  next();
-});
-
-// after save, hash password
+// Hash password before save
 usersSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
-    next();
+    return next();
   }
-
   this.password = await bcrypt.hash(this.password, 8);
+  next();
 });
 
 // JWT Access Token
@@ -133,44 +112,29 @@ usersSchema.methods.getJWTRefreshToken = function () {
   });
 };
 
-// compare password
+// Compare password
 usersSchema.methods.comparePassword = async function (password) {
   return bcrypt.compare(password, this.password);
 };
 
-// generating password reset token
+// Generate password reset token
 usersSchema.methods.getResetPasswordToken = function () {
-  // generating token
   const resetToken = crypto.randomBytes(20).toString('hex');
-
-  // hashing and adding resetPasswordToken to usersSchema
-  this.resetPasswordToken = crypto
-    .createHash('sha256')
-    .update(resetToken)
-    .digest('hex');
-
+  this.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
   this.resetPasswordExpire = Date.now() + 15 * 60 * 1000;
   return resetToken;
 };
 
-// generating email verification token
+// Generate email verification token
 usersSchema.methods.getEmailVerificationToken = function () {
-  // generating token
   const verificationToken = crypto.randomBytes(20).toString('hex');
-
-  // hashing and adding emailVerificationToken to usersSchema
-  this.emailVerificationToken = crypto
-    .createHash('sha256')
-    .update(verificationToken)
-    .digest('hex');
-
+  this.emailVerificationToken = crypto.createHash('sha256').update(verificationToken).digest('hex');
   this.emailVerificationExpire = Date.now() + 15 * 60 * 1000;
   return verificationToken;
 };
 
-// Indexes cho performance
-usersSchema.index({ hotelId: 1, email: 1 });
-usersSchema.index({ hotelId: 1, userName: 1 });
+usersSchema.index({ email: 1 });
+usersSchema.index({ userName: 1 });
 usersSchema.index({ role: 1 });
 
 module.exports = mongoose.model('Users', usersSchema);

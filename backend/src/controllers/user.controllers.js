@@ -80,14 +80,7 @@ class UserController {
 
   async unblockedUser(req, res) {
     try {
-      const { user } = req;
-      const targetUserId = req.params.id;
-
-      if (user._id.toString() === targetUserId) {
-        return res.status(400).json(errorResponse(1, 'FAILED', "Sorry! You can't unblock yourself"));
-      }
-
-      const result = await userService.unblockUser(targetUserId); // Sẽ thêm vào service nếu chưa có
+      const result = await userService.unblockUser(req.params.id, req.user);
       res.status(200).json(result);
     } catch (error) {
       res.status(error.status || 500).json(error.response || errorResponse(2, 'SERVER SIDE ERROR', error));
