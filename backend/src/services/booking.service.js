@@ -3,6 +3,7 @@ const bookingRepository = require('../repositories/booking.repository');
 const { errorResponse, successResponse } = require('../configs/app.response');
 const MyQueryHelper = require('../configs/api.feature');
 const { bookingDatesBeforeCurrentDate } = require('../lib/booking.dates.validator');
+const { broadcast } = require('../configs/websocket');
 
 class BookingService {
   async placedBookingOrder(req) {
@@ -38,6 +39,7 @@ class BookingService {
     };
 
     const booking = await bookingRepository.create(data);
+    broadcast({ event: 'BOOKING_PLACED', data: booking });
 
     return successResponse(0, 'SUCCESS', 'Your room booking order placed successful. Please wait for confirmation.', booking);
   }
@@ -344,6 +346,8 @@ class BookingService {
         throw { status: 400, response: errorResponse(1, 'FAILED', `Your provided booking_status '${req.body.booking_status}' can't match our system. Please try again using a correct booking_status`) };
     }
 
+    broadcast({ event: 'BOOKING_UPDATED', data: booking });
+
     return successResponse(0, 'SUCCESS', `Booking order has been '${booking.booking_status}' successful`, booking);
   }
 
@@ -378,6 +382,8 @@ class BookingService {
       myRoom.room_status = 'available';
       await myRoom.save({ validateBeforeSave: false });
     }
+
+    broadcast({ event: 'BOOKING_CHECKED_OUT', data: booking });
 
     return successResponse(0, 'SUCCESS', 'Checkout completed successfully. Room is now available.', booking);
   }

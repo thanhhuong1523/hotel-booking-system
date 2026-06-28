@@ -29,7 +29,7 @@ class ReviewService {
       throw { status: 400, response: errorResponse(1, 'FAILED', 'Sorry! This booking already add an review') };
     }
 
-    if (myBooking.booking_status !== 'in-reviews') {
+    if (myBooking.booking_status !== 'in-reviews' && myBooking.booking_status !== 'completed') {
       throw { status: 400, response: errorResponse(1, 'FAILED', 'Invalid booking status for adding a review') };
     }
 

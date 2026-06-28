@@ -28,6 +28,15 @@ ApiService.interceptors.request.use(
       config.headers['Content-Type'] = 'application/json';
     }
 
+    config.headers['Cache-Control'] = 'no-cache';
+    config.headers.Pragma = 'no-cache';
+    config.headers.Expires = '0';
+
+    if (config.url && (config.method === 'get' || config.method === 'GET')) {
+      const separator = config.url.includes('?') ? '&' : '?';
+      config.url = `${config.url}${separator}_t=${new Date().getTime()}`;
+    }
+
     if (!config?.noAuth) {
       const token = getSessionToken();
       if (token) {
@@ -61,7 +70,7 @@ ApiService.interceptors.response.use(
     }
 
     // eslint-disable-next-line no-underscore-dangle
-    if (error.response.status === 401 && !originalRequest._retry) {
+    if (error?.response?.status === 401 && !originalRequest?._retry) {
       // if authorized to logout user and redirect login page
       removeSessionAndLogoutUser();
     }

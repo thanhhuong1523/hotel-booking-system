@@ -1,14 +1,17 @@
 /**
  * @name Hotel Room Booking System
- * @author Md. Samiur Rahman (Mukul)
- * @description Hotel Room Booking and Management System Software ~ Developed By Md. Samiur Rahman (Mukul)
- * @copyright ©2023 ― Md. Samiur Rahman (Mukul). All rights reserved.
- * @version v0.0.1
- *
  */
 
 import {
-  DashboardOutlined, FileProtectOutlined, FullscreenExitOutlined, FullscreenOutlined, HomeOutlined, LogoutOutlined, TeamOutlined, UserOutlined
+  BarChartOutlined,
+  DashboardOutlined,
+  FileProtectOutlined,
+  FullscreenExitOutlined,
+  FullscreenOutlined,
+  HomeOutlined,
+  LogoutOutlined,
+  TeamOutlined,
+  UserOutlined
 } from '@ant-design/icons';
 import {
   Button, Layout, Menu, Tooltip
@@ -21,6 +24,7 @@ import Dashboard from '../components/tabs/Dashboard';
 import MyProfile from '../components/tabs/MyProfile';
 import Orders from '../components/tabs/Orders';
 import Rooms from '../components/tabs/Rooms';
+import Statistics from '../components/tabs/Statistics';
 import Users from '../components/tabs/Users';
 import useFullScreen from '../hooks/useFullScreen';
 import ApiService from '../utils/apiService';
@@ -56,100 +60,42 @@ function Main() {
 
   const handleTabChange = (key) => {
     switch (key) {
-      case '1': {
-        navigate('/main/dashboard');
-        break;
-      }
-      case '2': {
-        navigate('/main/users');
-        break;
-      }
-      case '3': {
-        navigate('/main/hotel-rooms');
-        break;
-      }
-      case '4': {
-        navigate('/main/booking-orders');
-        break;
-      }
-      case '5': {
-        navigate('/main/profile');
-        break;
-      }
-      case '6': {
-        userLogout();
-        break;
-      }
-      default: {
-        navigate('/main/dashboard');
-      }
+      case '1': { navigate('/main/dashboard'); break; }
+      case '2': { navigate('/main/users'); break; }
+      case '3': { navigate('/main/hotel-rooms'); break; }
+      case '4': { navigate('/main/booking-orders'); break; }
+      case '5': { navigate('/main/statistics'); break; }
+      case '6': { navigate('/main/profile'); break; }
+      case '7': { userLogout(); break; }
+      default: { navigate('/main/dashboard'); }
     }
   };
 
   useEffect(() => {
     if (tab) {
       switch (tab) {
-        case 'dashboard': {
-          setSelectedKeys('1');
-          break;
-        }
-        case 'users': {
-          setSelectedKeys('2');
-          break;
-        }
-        case 'hotel-rooms': {
-          setSelectedKeys('3');
-          break;
-        }
-        case 'booking-orders': {
-          setSelectedKeys('4');
-          break;
-        }
-        case 'profile': {
-          setSelectedKeys('5');
-          break;
-        }
-        case 'logout': {
-          setSelectedKeys('6');
-          break;
-        }
-        default: {
-          navigate('/not-found');
-        }
+        case 'dashboard': { setSelectedKeys('1'); break; }
+        case 'users': { setSelectedKeys('2'); break; }
+        case 'hotel-rooms': { setSelectedKeys('3'); break; }
+        case 'booking-orders': { setSelectedKeys('4'); break; }
+        case 'statistics': { setSelectedKeys('5'); break; }
+        case 'profile': { setSelectedKeys('6'); break; }
+        case 'logout': { setSelectedKeys('7'); break; }
+        default: { navigate('/not-found'); }
       }
     }
   }, [tab, navigate]);
 
   useEffect(() => {
-    switch (selectedKeys) {
-      case '1': {
-        window.document.title = 'Beach Resort — Dashboard';
-        break;
-      }
-      case '2': {
-        window.document.title = 'Beach Resort — Users';
-        break;
-      }
-      case '3': {
-        window.document.title = 'Beach Resort — Hotel Rooms';
-        break;
-      }
-      case '4': {
-        window.document.title = 'Beach Resort — Booking Orders';
-        break;
-      }
-      case '5': {
-        window.document.title = 'Beach Resort — Profile';
-        break;
-      }
-      case '6': {
-        window.document.title = 'Beach Resort — Logout';
-        break;
-      }
-      default: {
-        window.document.title = 'Beach Resort — Dashboard';
-      }
-    }
+    const titles = {
+      1: 'Beach Resort — Dashboard',
+      2: 'Beach Resort — Users',
+      3: 'Beach Resort — Hotel Rooms',
+      4: 'Beach Resort — Booking Orders',
+      5: 'Beach Resort — Statistics',
+      6: 'Beach Resort — Profile'
+    };
+    window.document.title = titles[selectedKeys] || 'Beach Resort — Dashboard';
   }, [selectedKeys]);
 
   return (
@@ -161,9 +107,7 @@ function Main() {
           theme='dark'
           mode='inline'
           selectedKeys={[selectedKeys]}
-          onClick={(e) => {
-            handleTabChange(e.key);
-          }}
+          onClick={(e) => { handleTabChange(e.key); }}
           items={[
             {
               key: '1',
@@ -187,11 +131,16 @@ function Main() {
             },
             {
               key: '5',
+              icon: <BarChartOutlined />,
+              label: 'Statistics'
+            },
+            {
+              key: '6',
               icon: <UserOutlined />,
               label: 'My Profile'
             },
             {
-              key: '6',
+              key: '7',
               icon: <LogoutOutlined />,
               label: 'Logout'
             }
@@ -229,20 +178,15 @@ function Main() {
           {selectedKeys === '2' && (<Users />)}
           {selectedKeys === '3' && (<Rooms />)}
           {selectedKeys === '4' && (<Orders />)}
-          {selectedKeys === '5' && (<MyProfile />)}
+          {selectedKeys === '5' && (<Statistics />)}
+          {selectedKeys === '6' && (<MyProfile />)}
         </Content>
 
-        <Footer className='text-center font-text-font font-medium '>
-          ©2023 Beach Resort — Developed By
+        <Footer className='text-center font-text-font font-medium'>
+          &copy;
+          {new Date().getFullYear()}
           {' '}
-          <a
-            className='text-color-primary hover:text-color-secondary'
-            href='https://srmukul.com'
-            target='_blank'
-            rel='noreferrer'
-          >
-            Md. Samiur Rahman (Mukul)
-          </a>
+          Beach Resort — Hotel Management System
         </Footer>
       </Layout>
     </Layout>

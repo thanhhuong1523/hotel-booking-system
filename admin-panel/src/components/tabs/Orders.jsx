@@ -8,8 +8,9 @@
  */
 
 import {
-  Button, Empty, Pagination, Rate, Result, Skeleton, Tag, Tooltip
+  Button, Empty, Pagination, Rate, Result, Skeleton, Tag, Tooltip, Modal
 } from 'antd';
+import { ExclamationCircleFilled } from '@ant-design/icons';
 import React, { useEffect, useState } from 'react';
 import { v4 as uniqueId } from 'uuid';
 import useFetchData from '../../hooks/useFetchData';
@@ -17,6 +18,10 @@ import arrayToCommaSeparatedText from '../../utils/arrayToCommaSeparatedText';
 import { bookingStatusAsResponse } from '../../utils/responseAsStatus';
 import QueryOptions from '../shared/QueryOptions';
 import RoomStatusUpdateModal from '../shared/RoomStatusUpdateModal';
+import ApiService from '../../utils/apiService';
+import notificationWithIcon from '../../utils/notification';
+
+const { confirm } = Modal;
 
 function Orders() {
   const [fetchAgain, setFetchAgain] = useState(false);
@@ -34,6 +39,78 @@ function Orders() {
   useEffect(() => {
     setQuery((prevState) => ({ ...prevState, page: '1' }));
   }, [query.rows, query.search]);
+
+  // Real-time WebSocket connection
+  useEffect(() => {
+    let ws;
+    let reconnectTimeout;
+
+    const connectWS = () => {
+      const wsUrl = 'ws://localhost:8080';
+      ws = new WebSocket(wsUrl);
+
+      ws.onmessage = (event) => {
+        try {
+          const payload = JSON.parse(event.data);
+          if (payload.event === 'BOOKING_PLACED' || payload.event === 'BOOKING_CHECKED_OUT' || payload.event === 'BOOKING_UPDATED') {
+            setTimeout(() => {
+              setFetchAgain((prev) => !prev);
+            }, 500);
+          }
+        } catch (err) {
+          // Ignore
+        }
+      };
+
+      ws.onclose = () => {
+        reconnectTimeout = setTimeout(connectWS, 3000);
+      };
+
+      ws.onerror = () => {
+        ws.close();
+      };
+    };
+
+    connectWS();
+
+    return () => {
+      if (ws) ws.close();
+      clearTimeout(reconnectTimeout);
+    };
+  }, []);
+
+  // function handle admin check-out
+  const handleAdminCheckout = (id) => {
+    confirm({
+      icon: <ExclamationCircleFilled />,
+      content: 'Are you sure you want to confirm check-out for this booking?',
+      okText: 'Confirm',
+      cancelText: 'Cancel',
+      onOk() {
+        return new Promise((resolve, reject) => {
+          ApiService.put(`/api/v1/checkout-booking/${id}`)
+            .then((res) => {
+              if (res?.result_code === 0) {
+                notificationWithIcon('success', 'SUCCESS', res?.result?.message || 'Check-out completed successfully!');
+                setFetchAgain(!fetchAgain);
+                resolve();
+              } else {
+                notificationWithIcon('error', 'ERROR', 'Something went wrong. App server error.');
+                reject();
+              }
+            })
+            .catch((err) => {
+              const errMsg = err?.response?.data?.result?.error?.message ||
+                             (typeof err?.response?.data?.result?.error === 'string' ? err?.response?.data?.result?.error : null) ||
+                             err?.message ||
+                             'Something went wrong. App server error.';
+              notificationWithIcon('error', 'ERROR', errMsg);
+              reject();
+            });
+        }).catch(() => notificationWithIcon('error', 'ERROR', 'Oops errors!'));
+      }
+    });
+  };
 
   return (
     <div>
@@ -135,20 +212,42 @@ function Orders() {
                             </td>
                           </Tooltip>
                           <td className='data-table-body-tr-td !px-0 text-center'>
-                            {data?.booking_status !== 'cancel' &&
-                            data?.booking_status !== 'rejected' &&
-                            data?.booking_status !== 'in-reviews' &&
-                            data?.booking_status !== 'completed' ? (
-                              <Button
-                                className='inline-flex items-center !px-2'
-                                type='primary'
-                                onClick={() => setStatusUpdateModal((prevState) => ({
-                                  ...prevState, open: true, roomId: data?.id, status: data?.booking_status
-                                }))}
-                              >
-                                Update Status
-                              </Button>
-                              ) : 'Action Not Possible!'}
+                            {data?.booking_status === 'approved' ? (
+                              <div className='flex gap-2 justify-center px-2'>
+                                <Button
+                                  className='inline-flex items-center !px-2'
+                                  type='primary'
+                                  onClick={() => setStatusUpdateModal((prevState) => ({
+                                    ...prevState, open: true, roomId: data?.id, status: data?.booking_status
+                                  }))}
+                                >
+                                  Update Status
+                                </Button>
+                                <Button
+                                  className='inline-flex items-center !px-2'
+                                  type='primary'
+                                  danger
+                                  onClick={() => handleAdminCheckout(data?.id)}
+                                >
+                                  Check-out
+                                </Button>
+                              </div>
+                            ) : (
+                              data?.booking_status !== 'cancel' &&
+                               data?.booking_status !== 'rejected' &&
+                               data?.booking_status !== 'in-reviews' &&
+                               data?.booking_status !== 'completed' ? (
+                                 <Button
+                                   className='inline-flex items-center !px-2'
+                                   type='primary'
+                                   onClick={() => setStatusUpdateModal((prevState) => ({
+                                     ...prevState, open: true, roomId: data?.id, status: data?.booking_status
+                                   }))}
+                                 >
+                                   Update Status
+                                 </Button>
+                                ) : 'Action Not Possible!'
+                            )}
                           </td>
                         </tr>
                       ))}

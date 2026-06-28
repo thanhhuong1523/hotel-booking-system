@@ -19,8 +19,12 @@
 // imports modules & dependencies
 const app = require('./src/app');
 const logger = require('./src/middleware/winston.logger');
+const { initWebSocket } = require('./src/configs/websocket');
 
 // app listens to .env defined port
-app.listen(process.env.APP_PORT, () => {
+const server = app.listen(process.env.APP_PORT, () => {
   logger.info(`App server running on: ${process.env.APP_BASE_URL}`);
 });
+
+// Initialize WebSocket server
+initWebSocket(server);

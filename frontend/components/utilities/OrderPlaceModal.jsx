@@ -33,11 +33,11 @@ function OrderPlaceModal({ bookingModal, setBookingModal }) {
 
   const validateDates = () => {
     if (selectedDates.length === 0) {
-      notificationWithIcon('error', 'ERROR', 'Yêu cầu chọn tối thiểu 1 ngày để đặt phòng.');
+      notificationWithIcon('error', 'ERROR', 'At least 1 day must be selected to book.');
       return false;
     }
     if (selectedDates.length > 5) {
-      notificationWithIcon('error', 'ERROR', 'Chỉ được chọn tối đa 5 ngày đặt phòng.');
+      notificationWithIcon('error', 'ERROR', 'Maximum 5 days can be selected to book.');
       return false;
     }
     return true;
@@ -56,16 +56,16 @@ function OrderPlaceModal({ bookingModal, setBookingModal }) {
   // function to handle placed room booking order & payment
   const handlePlacedOrder = () => {
     if (!paymentInfo.cardName || !paymentInfo.cardNumber || !paymentInfo.cardExpiry || !paymentInfo.cardCVC) {
-      notificationWithIcon('error', 'ERROR', 'Vui lòng nhập đầy đủ thông tin thanh toán.');
+      notificationWithIcon('error', 'ERROR', 'Please enter all credit card payment details.');
       return;
     }
 
     confirm({
-      title: 'Xác nhận thanh toán & Đặt phòng',
+      title: 'Confirm Payment & Booking',
       icon: <ExclamationCircleOutlined />,
-      content: `Bạn có chắc chắn muốn đặt phòng này trong ${selectedDates.length} đêm? Tổng số tiền cần thanh toán: $${bookingModal?.roomPrice * selectedDates.length}`,
-      okText: 'Thanh toán & Đặt phòng',
-      cancelText: 'Hủy bỏ',
+      content: `Are you sure you want to book this room for ${selectedDates.length} nights? Total payment amount: $${bookingModal?.roomPrice * selectedDates.length}`,
+      okText: 'Pay & Confirm Booking',
+      cancelText: 'Cancel',
       onOk() {
         setLoading(true);
         return new Promise((resolve, reject) => {
@@ -78,28 +78,28 @@ function OrderPlaceModal({ bookingModal, setBookingModal }) {
               setLoading(false);
               resolve();
               if (res?.result_code === 0) {
-                notificationWithIcon('success', 'SUCCESS', 'Đặt phòng và thanh toán hóa đơn thành công!');
+                notificationWithIcon('success', 'SUCCESS', 'Your room booking order placed and paid successfully!');
                 setBookingModal((prevState) => ({ ...prevState, open: false, roomId: null }));
                 router.push('/profile?tab=booking-history');
                 setSelectedDates([]);
               } else {
-                notificationWithIcon('error', 'ERROR', 'Có lỗi xảy ra từ máy chủ backend.');
+                notificationWithIcon('error', 'ERROR', 'Sorry! Something went wrong. App server error.');
               }
             })
             .catch((err) => {
               setLoading(false);
-              notificationWithIcon('error', 'ERROR', err?.response?.data?.result?.error?.message || err?.message || 'Có lỗi xảy ra từ máy chủ backend.');
+              notificationWithIcon('error', 'ERROR', err?.response?.data?.result?.error?.message || err?.message || 'Sorry! Something went wrong. App server error.');
               reject();
             });
-        }).catch((err) => message.error(err?.message || 'Có lỗi xảy ra!'));
+        }).catch((err) => message.error(err?.message || 'Oops errors!'));
       }
     });
   };
 
   const getModalTitle = () => {
-    if (step === 1) return 'Chọn ngày bạn muốn đặt phòng:';
-    if (step === 2) return 'Hóa đơn chi tiết đặt phòng:';
-    return 'Nhập thông tin thanh toán (Thẻ Demo):';
+    if (step === 1) return 'Select dates you want to Book Room:';
+    if (step === 2) return 'Checkout pricing breakdown:';
+    return 'Demo Payment Details:';
   };
 
   return (
@@ -115,30 +115,30 @@ function OrderPlaceModal({ bookingModal, setBookingModal }) {
           {step === 1 && (
             <>
               <Button onClick={() => setBookingModal((prevState) => ({ ...prevState, open: false, roomId: null }))} type='default'>
-                Hủy bỏ
+                Cancel
               </Button>
               <Button onClick={goToCheckOut} type='primary'>
-                Tiếp theo: Hóa đơn
+                Next: Checkout
               </Button>
             </>
           )}
           {step === 2 && (
             <>
               <Button onClick={() => setStep(1)} type='default'>
-                Quay lại chọn ngày
+                Back to Dates
               </Button>
               <Button onClick={goToPayment} type='primary'>
-                Tiếp theo: Thanh toán
+                Next: Proceed to Payment
               </Button>
             </>
           )}
           {step === 3 && (
             <>
               <Button onClick={() => setStep(2)} type='default' disabled={loading}>
-                Quay lại hóa đơn
+                Back to Summary
               </Button>
               <Button onClick={handlePlacedOrder} type='primary' loading={loading}>
-                Thanh toán & Đặt phòng
+                Pay & Confirm Booking
               </Button>
             </>
           )}
@@ -167,11 +167,11 @@ function OrderPlaceModal({ bookingModal, setBookingModal }) {
 
       {step === 2 && (
         <div style={{ padding: '15px 0', fontSize: '15px', lineHeight: '2' }}>
-          <p><strong>Tên phòng:</strong> {bookingModal?.roomName}</p>
-          <p><strong>Giá phòng/đêm:</strong> ${bookingModal?.roomPrice}</p>
-          <p><strong>Tổng số đêm chọn:</strong> {selectedDates.length} đêm</p>
+          <p><strong>Room Name:</strong> {bookingModal?.roomName}</p>
+          <p><strong>Price per night:</strong> ${bookingModal?.roomPrice}</p>
+          <p><strong>Total Nights Selected:</strong> {selectedDates.length} nights</p>
           <div style={{ background: '#f5f5f5', padding: '10px', borderRadius: '4px', margin: '10px 0' }}>
-            <p style={{ margin: 0 }}><strong>Các ngày đã chọn:</strong></p>
+            <p style={{ margin: 0 }}><strong>Selected Dates:</strong></p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '5px' }}>
               {selectedDates.map((date) => (
                 <span key={date} style={{ background: '#e6f7ff', border: '1px solid #91d5ff', padding: '2px 8px', borderRadius: '4px', fontSize: '12px' }}>
@@ -181,7 +181,7 @@ function OrderPlaceModal({ bookingModal, setBookingModal }) {
             </div>
           </div>
           <p style={{ fontSize: '18px', color: '#1890ff', marginTop: '15px' }}>
-            <strong>Tổng số tiền:</strong> ${bookingModal?.roomPrice * selectedDates.length}
+            <strong>Total Amount:</strong> ${bookingModal?.roomPrice * selectedDates.length}
           </p>
         </div>
       )}
@@ -190,14 +190,14 @@ function OrderPlaceModal({ bookingModal, setBookingModal }) {
         <div style={{ padding: '15px 0' }}>
           <div style={{ background: '#e6f7ff', border: '1px solid #91d5ff', padding: '10px', borderRadius: '4px', marginBottom: '15px' }}>
             <p style={{ margin: 0, fontSize: '16px' }}>
-              <strong>Tổng số tiền thanh toán:</strong> ${bookingModal?.roomPrice * selectedDates.length}
+              <strong>Total Amount to Pay:</strong> ${bookingModal?.roomPrice * selectedDates.length}
             </p>
           </div>
           
           <div style={{ marginBottom: '12px' }}>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Tên chủ thẻ</label>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Cardholder Name</label>
             <Input
-              placeholder="Ví dụ: NGUYEN VAN A"
+              placeholder="e.g. John Doe"
               size="large"
               value={paymentInfo.cardName}
               onChange={(e) => setPaymentInfo({ ...paymentInfo, cardName: e.target.value })}
@@ -205,7 +205,7 @@ function OrderPlaceModal({ bookingModal, setBookingModal }) {
           </div>
           
           <div style={{ marginBottom: '12px' }}>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Số thẻ</label>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Card Number</label>
             <Input
               placeholder="1234 5678 1234 5678"
               size="large"
@@ -220,7 +220,7 @@ function OrderPlaceModal({ bookingModal, setBookingModal }) {
           
           <div style={{ display: 'flex', gap: '15px' }}>
             <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Ngày hết hạn</label>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Expiration Date</label>
               <Input
                 placeholder="MM/YY"
                 size="large"
@@ -236,7 +236,7 @@ function OrderPlaceModal({ bookingModal, setBookingModal }) {
               />
             </div>
             <div style={{ flex: 1 }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>Mã bảo mật CVC</label>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>CVC</label>
               <Input
                 placeholder="123"
                 size="large"

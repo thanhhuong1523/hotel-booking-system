@@ -1,10 +1,5 @@
 /**
  * @name Hotel Room Booking System
- * @author Md. Samiur Rahman (Mukul)
- * @description Hotel Room Booking and Management System Software ~ Developed By Md. Samiur Rahman (Mukul)
- * @copyright ©2023 ― Md. Samiur Rahman (Mukul). All rights reserved.
- * @version v0.0.1
- *
  */
 
 import React from 'react';
@@ -12,9 +7,13 @@ import React from 'react';
 function Banner({ children, title, subtitle }) {
   return (
     <div className='banner'>
+      <span className='banner-badge'>Beach Resort</span>
       <h1>{title}</h1>
-      <p>{subtitle}</p>
-      {children}
+      <div className='banner-divider' />
+      {subtitle && <p>{subtitle}</p>}
+      <div className='banner-actions'>
+        {children}
+      </div>
     </div>
   );
 }
