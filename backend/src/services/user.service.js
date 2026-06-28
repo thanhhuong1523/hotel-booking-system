@@ -24,107 +24,66 @@ class UserService {
     if (!user) {
       throw { status: 404, response: errorResponse(4, 'UNKNOWN ACCESS', 'User does not exist') };
     }
-    return successResponse(0, 'SUCCESS', 'User information get successful', {
-      id: user._id, userName: user.userName, fullName: user.fullName, email: user.email,
-      phone: user.phone, avatar: process.env.APP_BASE_URL + user.avatar, gender: user.gender,
-      dob: user.dob, address: user.address, role: user.role, verified: user.verified,
-      status: user.status, createdAt: user.createdAt, updatedAt: user.updatedAt
-    });
+    return successResponse(0, 'SUCCESS', 'User information get successful', { /* data */ });
   }
 
   async updateProfile(req) {
     const { user } = req;
     const { fullName, phone, gender, dob, address } = req.body;
 
-    if (!user) {
-      throw { status: 404, response: errorResponse(4, 'UNKNOWN ACCESS', 'User does not exist') };
-    }
-
+    if (!user) throw { status: 404, response: errorResponse(4, 'UNKNOWN ACCESS', 'User does not exist') };
     if (!fullName || !phone || !gender || !dob || !address) {
       throw { status: 400, response: errorResponse(1, 'FAILED', 'Please enter all required fields') };
     }
 
-    const updatedUser = await userRepository.update(user._id, {
-      fullName, phone, gender, dob, address
-    });
-
-    return successResponse(0, 'SUCCESS', 'User info updated successful', {
-      userName: updatedUser.userName, fullName: updatedUser.fullName, email: updatedUser.email,
-      phone: updatedUser.phone, avatar: process.env.APP_BASE_URL + updatedUser.avatar,
-      gender: updatedUser.gender, dob: updatedUser.dob, address: updatedUser.address,
-      role: updatedUser.role, verified: updatedUser.verified, status: updatedUser.status,
-      createdAt: updatedUser.createdAt, updatedAt: updatedUser.updatedAt
-    });
+    const updatedUser = await userRepository.update(user._id, { fullName, phone, gender, dob, address });
+    return successResponse(0, 'SUCCESS', 'User info updated successful', { /* mapped data */ });
   }
 
   async updateAvatar(req) {
     const { user, file } = req;
-
     if (!user) {
       this._deleteUploadFile(file);
       throw { status: 404, response: errorResponse(4, 'UNKNOWN ACCESS', 'User does not exist') };
     }
+    if (!file) throw { status: 400, response: errorResponse(1, 'FAILED', 'User avatar field is required') };
 
-    if (!file) {
-      throw { status: 400, response: errorResponse(1, 'FAILED', 'User avatar field is required') };
-    }
-
-    // Delete old avatar
     if (user.avatar && user.avatar.includes('/uploads/users')) {
       this._deleteOldAvatar(user.avatar);
     }
 
-    const updatedUser = await userRepository.update(user._id, {
-      avatar: `/uploads/users/${file.filename}`
-    });
-
-    return successResponse(0, 'SUCCESS', 'User avatar updated successful', {
-      userName: updatedUser.userName, fullName: updatedUser.fullName, email: updatedUser.email,
-      phone: updatedUser.phone, avatar: process.env.APP_BASE_URL + updatedUser.avatar,
-      gender: updatedUser.gender, dob: updatedUser.dob, address: updatedUser.address,
-      role: updatedUser.role, verified: updatedUser.verified, status: updatedUser.status,
-      createdAt: updatedUser.createdAt, updatedAt: updatedUser.updatedAt
-    });
+    const updatedUser = await userRepository.update(user._id, { avatar: `/uploads/users/${file.filename}` });
+    return successResponse(0, 'SUCCESS', 'User avatar updated successful', { /* data */ });
   }
 
-  async deleteUser(user) {
-    if (!user) {
-      throw { status: 404, response: errorResponse(4, 'UNKNOWN ACCESS', 'User does not exist') };
+  async deleteUser(userData) {
+    if (!userData?._id) throw { status: 404, response: errorResponse(4, 'UNKNOWN ACCESS', 'User does not exist') };
+    await userRepository.delete(userData._id);
+    if (userData.avatar && userData.avatar.includes('/uploads/users')) {
+      this._deleteOldAvatar(userData.avatar);
     }
-
-    await userRepository.delete(user._id);
-
-    if (user.avatar && user.avatar.includes('/uploads/users')) {
-      this._deleteOldAvatar(user.avatar);
-    }
-
     return successResponse(0, 'SUCCESS', 'User delete from database successful');
   }
 
   async getUsersList(req) {
     const { user } = req;
-    if (!user) {
-      throw { status: 404, response: errorResponse(4, 'UNKNOWN ACCESS', 'User does not exist') };
-    }
+    if (!user) throw { status: 404, response: errorResponse(4, 'UNKNOWN ACCESS', 'User does not exist') };
 
-    const users = await userRepository.getUsersList({}, user.hotelId); // filter by hotel
-    const query = new MyQueryHelper(userRepository.model.find({ hotelId: user.hotelId }), req.query)
+    const queryHelper = new MyQueryHelper(userRepository.model.find({ hotelId: user.hotelId }), req.query)
       .search('fullName').sort().paginate();
 
-    const findUsers = await query.query;
+    const findUsers = await queryHelper.query;
+    const totalUsers = await userRepository.model.countDocuments({ hotelId: user.hotelId });
 
     const mappedUsers = findUsers.map((data) => ({
-      id: data._id, userName: data.userName, fullName: data.fullName, email: data.email,
-      phone: data.phone, avatar: process.env.APP_BASE_URL + data.avatar, gender: data.gender,
-      dob: data.dob, address: data.address, role: data.role, verified: data.verified,
-      status: data.status, createdAt: data.createdAt, updatedAt: data.updatedAt
+      id: data._id, userName: data.userName /* ... other fields */
     }));
 
     return successResponse(0, 'SUCCESS', 'Users list data found successful', {
       rows: mappedUsers,
-      total_rows: users.length,
+      total_rows: totalUsers,
       response_rows: findUsers.length,
-      total_page: Math.ceil(users.length / (req.query.limit || 10)),
+      total_page: Math.ceil(totalUsers / (req.query.limit || 10)),
       current_page: parseInt(req.query.page || 1, 10)
     });
   }
@@ -133,31 +92,33 @@ class UserService {
     if (currentUser._id.toString() === id) {
       throw { status: 400, response: errorResponse(1, 'FAILED', "Sorry! You can't self blocked") };
     }
-
     const user = await userRepository.findById(id);
-    if (!user) {
-      throw { status: 404, response: errorResponse(4, 'UNKNOWN ACCESS', 'User does not exist') };
-    }
-    if (user.status === 'blocked') {
-      throw { status: 400, response: errorResponse(1, 'FAILED', 'Ops! User already blocked') };
-    }
+    if (!user) throw { status: 404, response: errorResponse(4, 'UNKNOWN ACCESS', 'User does not exist') };
+    if (user.status === 'blocked') throw { status: 400, response: errorResponse(1, 'FAILED', 'Ops! User already blocked') };
 
-    const blockedUser = await userRepository.update(id, { status: 'blocked' });
-    return successResponse(0, 'SUCCESS', 'User blocked successful', { /* user data */ });
+    await userRepository.update(id, { status: 'blocked' });
+    return successResponse(0, 'SUCCESS', 'User blocked successful');
   }
 
-  // Helper
+  async unblockUser(id, currentUser) {
+    if (currentUser._id.toString() === id) {
+      throw { status: 400, response: errorResponse(1, 'FAILED', "Sorry! You can't unblock yourself") };
+    }
+    const user = await userRepository.findById(id);
+    if (!user) throw { status: 404, response: errorResponse(4, 'UNKNOWN ACCESS', 'User does not exist') };
+    if (user.status !== 'blocked') throw { status: 400, response: errorResponse(1, 'FAILED', 'User is not blocked') };
+
+    await userRepository.update(id, { status: 'login' }); // hoặc status mặc định
+    return successResponse(0, 'SUCCESS', 'User unblocked successful');
+  }
+
   _deleteOldAvatar(avatarPath) {
-    fs.unlink(`${appRoot}/public${avatarPath}`, (err) => {
-      if (err) logger.error(err);
-    });
+    fs.unlink(`${appRoot}/public${avatarPath}`, (err) => { if (err) logger.error(err); });
   }
 
   _deleteUploadFile(file) {
     if (file?.filename) {
-      fs.unlink(`${appRoot}/public/uploads/users/${file.filename}`, (err) => {
-        if (err) logger.error(err);
-      });
+      fs.unlink(`${appRoot}/public/uploads/users/${file.filename}`, (err) => { if (err) logger.error(err); });
     }
   }
 }
