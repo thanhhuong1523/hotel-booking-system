@@ -125,10 +125,10 @@ usersSchema.methods.getResetPasswordToken = function () {
   return resetToken;
 };
 
-// Generate email verification token
+// Generate email verification token (6-digit OTP)
 usersSchema.methods.getEmailVerificationToken = function () {
-  const verificationToken = crypto.randomBytes(20).toString('hex');
-  this.emailVerificationToken = crypto.createHash('sha256').update(verificationToken).digest('hex');
+  const verificationToken = Math.floor(100000 + Math.random() * 900000).toString();
+  this.emailVerificationToken = verificationToken;
   this.emailVerificationExpire = Date.now() + 15 * 60 * 1000;
   return verificationToken;
 };

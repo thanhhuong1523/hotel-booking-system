@@ -35,7 +35,13 @@ function RoomPreview(props) {
       router.push('/auth/login');
     } else {
       setBookingModal((prevState) => (
-        { ...prevState, open: true, roomId: props?.room?.data?.id }
+        {
+          ...prevState,
+          open: true,
+          roomId: props?.room?.data?.id,
+          roomPrice: props?.room?.data?.room_price,
+          roomName: props?.room?.data?.room_name
+        }
       ));
     }
   };

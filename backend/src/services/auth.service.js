@@ -79,6 +79,7 @@ class AuthService {
       throw { status: 400, response: errorResponse(1, 'FAILED', 'Invalid email or password') };
     }
 
+    user.status = 'login';
     await userRepository.updateStatus(user._id, 'login');
     return user;
   }
@@ -144,20 +145,30 @@ class AuthService {
     const verificationToken = user.getEmailVerificationToken();
     await user.save({ validateBeforeSave: false });
 
-    const url = `${process.env.APP_BASE_URL}/auth/verify-email/${verificationToken}`;
-    return { user, url, subjects: 'User Email Verification', message: 'Click below link to verify your email...', title: 'Verify Your Email' };
+    // In OTP mode, we pass the token as the url parameter which is rendered as the OTP in the email template
+    const url = verificationToken;
+    return { user, url, subjects: 'User Email Verification', message: `Your email verification OTP is: ${verificationToken}`, title: 'Verify Your Email' };
   }
 
-  async emailVerification(token) {
-    const user = await userRepository.getEmailVerificationUser(token);
+  async emailVerification(user, token) {
     if (!user) {
-      throw { status: 404, response: errorResponse(4, 'UNKNOWN ACCESS', 'Email verification token is invalid or has been expired') };
+      throw { status: 404, response: errorResponse(4, 'UNKNOWN ACCESS', 'User does not exist') };
     }
 
-    user.verified = true;
-    user.emailVerificationToken = undefined;
-    user.emailVerificationExpire = undefined;
-    await user.save();
+    const verifiedUser = await userRepository.model.findOne({
+      _id: user._id,
+      emailVerificationToken: token,
+      emailVerificationExpire: { $gt: Date.now() }
+    });
+
+    if (!verifiedUser) {
+      throw { status: 400, response: errorResponse(1, 'FAILED', 'Email verification OTP is invalid or has been expired') };
+    }
+
+    verifiedUser.verified = true;
+    verifiedUser.emailVerificationToken = undefined;
+    verifiedUser.emailVerificationExpire = undefined;
+    await verifiedUser.save();
 
     return successResponse(0, 'SUCCESS', 'User email verification successful');
   }

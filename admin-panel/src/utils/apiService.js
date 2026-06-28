@@ -22,7 +22,11 @@ ApiService.interceptors.request.use(
     /**
      * Add your request interceptor logic here: setting headers, authorization etc.
      */
-    config.headers['Content-Type'] = 'application/json';
+    if (config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
+    } else if (!config.headers['Content-Type']) {
+      config.headers['Content-Type'] = 'application/json';
+    }
 
     if (!config?.noAuth) {
       const token = getSessionToken();

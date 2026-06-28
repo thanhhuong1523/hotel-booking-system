@@ -36,6 +36,18 @@ const bookingSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Reviews'
   },
+  total_price: {
+    type: Number
+  },
+  payment_status: {
+    type: String,
+    enum: ['unpaid', 'paid'],
+    default: 'unpaid'
+  },
+  payment_method: {
+    type: String,
+    default: 'none'
+  },
   createdAt: {
     type: Date,
     default: Date.now

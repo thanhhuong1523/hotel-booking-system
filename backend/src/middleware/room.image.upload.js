@@ -44,7 +44,7 @@ const storage = multer.diskStorage({
 const roomImageUpload = multer({
   storage,
   limits: {
-    fileSize: 1000000 // 1MB
+    fileSize: 5000000 // 5MB
   },
   fileFilter: (_req, files, cb) => {
     if (files.fieldname === 'room_images') {

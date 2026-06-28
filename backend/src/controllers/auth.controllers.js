@@ -97,7 +97,7 @@ class AuthController {
   async emailVerification(req, res) {
     try {
       const { token } = req.params;
-      const result = await authService.emailVerification(token);
+      const result = await authService.emailVerification(req.user, token);
       res.status(200).json(result);
     } catch (error) {
       res.status(error.status || 500).json(error.response || errorResponse(2, 'SERVER SIDE ERROR', error));

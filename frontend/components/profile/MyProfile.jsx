@@ -9,7 +9,7 @@
 
 import { EditOutlined, ExclamationCircleFilled } from '@ant-design/icons';
 import {
-  Button, Descriptions, Image, Modal, Result, Skeleton, Tag, Tooltip, Upload
+  Button, Descriptions, Image, Input, Modal, Result, Skeleton, Tag, Tooltip, Upload
 } from 'antd';
 import ImgCrop from 'antd-img-crop';
 import React, { useState } from 'react';
@@ -24,6 +24,10 @@ const { confirm } = Modal;
 
 function MyProfile() {
   const [editProfileModal, setEditProfileModal] = useState(false);
+  const [otpModalVisible, setOtpModalVisible] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpSending, setOtpSending] = useState(false);
   const token = getSessionToken();
   const user = getSessionUser();
 
@@ -54,31 +58,48 @@ function MyProfile() {
     }
   };
 
-  // function handle verify user email mail send
-  const handleVerifyEmail = () => {
-    confirm({
-      title: 'SEND EMAIL VERIFICATION LINK',
-      icon: <ExclamationCircleFilled />,
-      content: 'Are you sure send your email verification link?',
-      onOk() {
-        return new Promise((resolve, reject) => {
-          ApiService.post('/api/v1/auth/send-email-verification-link')
-            .then((res) => {
-              if (res?.result_code === 0) {
-                notificationWithIcon('success', 'SUCCESS', res?.result?.message || 'Verification link send successful');
-                resolve();
-              } else {
-                notificationWithIcon('error', 'ERROR', 'Sorry! Something went wrong. App server error');
-                reject();
-              }
-            })
-            .catch((err) => {
-              notificationWithIcon('error', 'ERROR', err?.response?.data?.result?.error?.message || err?.response?.data?.result?.error || 'Sorry! Something went wrong. App server error');
-              reject();
-            });
-        }).catch(() => notificationWithIcon('error', 'ERROR', 'Oops errors!'));
-      }
-    });
+  // function to handle sending OTP
+  const handleSendOtp = () => {
+    setOtpSending(true);
+    ApiService.post('/api/v1/auth/send-email-verification-link')
+      .then((res) => {
+        setOtpSending(false);
+        if (res?.result_code === 0) {
+          notificationWithIcon('success', 'SUCCESS', 'Verification OTP has been sent to your email.');
+          setOtpModalVisible(true);
+        } else {
+          notificationWithIcon('error', 'ERROR', 'Sorry! Something went wrong. App server error');
+        }
+      })
+      .catch((err) => {
+        setOtpSending(false);
+        notificationWithIcon('error', 'ERROR', err?.response?.data?.result?.error?.message || err?.response?.data?.result?.error || 'Sorry! Something went wrong. App server error');
+      });
+  };
+
+  // function to handle verifying OTP
+  const handleVerifyOtp = () => {
+    if (!otpCode || otpCode.length !== 6) {
+      notificationWithIcon('error', 'ERROR', 'Please enter a valid 6-digit OTP code');
+      return;
+    }
+    setOtpLoading(true);
+    ApiService.post(`/api/v1/auth/verify-email/${otpCode}`)
+      .then((res) => {
+        setOtpLoading(false);
+        if (res?.result_code === 0) {
+          notificationWithIcon('success', 'SUCCESS', 'Email verified successfully!');
+          setOtpModalVisible(false);
+          setSessionUserKeyAgainstValue('verified', true);
+          window.location.reload();
+        } else {
+          notificationWithIcon('error', 'ERROR', 'Invalid or expired OTP');
+        }
+      })
+      .catch((err) => {
+        setOtpLoading(false);
+        notificationWithIcon('error', 'ERROR', err?.response?.data?.result?.error?.message || err?.response?.data?.result?.error || 'Sorry! Something went wrong. App server error');
+      });
   };
 
   return (
@@ -99,10 +120,12 @@ function MyProfile() {
                 {!user?.verified && (
                   <Button
                     style={{ marginTop: '10px', marginRight: '20px' }}
-                    onClick={handleVerifyEmail}
+                    onClick={handleSendOtp}
                     shape='default'
                     type='primary'
                     size='large'
+                    loading={otpSending}
+                    disabled={otpSending}
                   >
                     Verify Email
                   </Button>
@@ -208,6 +231,27 @@ function MyProfile() {
           setEditProfileModal={setEditProfileModal}
         />
       )}
+
+      {/* OTP verification modal component */}
+      <Modal
+        title="Email Verification OTP"
+        open={otpModalVisible}
+        onOk={handleVerifyOtp}
+        onCancel={() => setOtpModalVisible(false)}
+        okText="Verify"
+        confirmLoading={otpLoading}
+      >
+        <div style={{ padding: '20px 0' }}>
+          <p>Please enter the 6-digit OTP code sent to your email:</p>
+          <Input
+            placeholder="Enter 6-digit OTP"
+            maxLength={6}
+            size="large"
+            value={otpCode}
+            onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+          />
+        </div>
+      </Modal>
     </>
   );
 }

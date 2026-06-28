@@ -75,6 +75,12 @@ function Orders() {
                           Booked Room
                         </th>
                         <th className='data-table-head-tr-th text-center' scope='col'>
+                          Total Price
+                        </th>
+                        <th className='data-table-head-tr-th text-center' scope='col'>
+                          Payment Status
+                        </th>
+                        <th className='data-table-head-tr-th text-center' scope='col'>
                           Review & Ratting
                         </th>
                         <th className='data-table-head-tr-th text-center' scope='col'>
@@ -105,6 +111,17 @@ function Orders() {
                           </td>
                           <td className='data-table-body-tr-td'>
                             {data?.room?.room_name}
+                          </td>
+                          <td className='data-table-body-tr-td text-center font-semibold'>
+                            {data?.total_price ? `$${data.total_price}` : 'N/A'}
+                          </td>
+                          <td className='data-table-body-tr-td text-center'>
+                            <Tag
+                              className='w-[80px] text-center uppercase'
+                              color={data?.payment_status === 'paid' ? 'green' : 'orange'}
+                            >
+                              {data?.payment_status || 'unpaid'}
+                            </Tag>
                           </td>
                           <Tooltip
                             title={data?.reviews?.message}

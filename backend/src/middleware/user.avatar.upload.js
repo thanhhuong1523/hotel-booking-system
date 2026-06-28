@@ -44,7 +44,7 @@ const storage = multer.diskStorage({
 const avatarUpload = multer({
   storage,
   limits: {
-    fileSize: 1000000 // 1MB
+    fileSize: 5000000 // 5MB
   },
   fileFilter: (_req, file, cb) => {
     if (file.fieldname === 'avatar') {

@@ -54,7 +54,11 @@ function BookingHistory() {
               }
             })
             .catch((err) => {
-              notificationWithIcon('error', 'ERROR', err?.response?.data?.result?.error?.message || err?.response?.data?.result?.error || 'Sorry! Something went wrong. App server error');
+              const errMsg = err?.response?.data?.result?.error?.message ||
+                             (typeof err?.response?.data?.result?.error === 'string' ? err?.response?.data?.result?.error : null) ||
+                             err?.message ||
+                             'Sorry! Something went wrong. App server error';
+              notificationWithIcon('error', 'ERROR', errMsg);
               reject();
             });
         }).catch(() => notificationWithIcon('error', 'ERROR', 'Oops errors!'));
@@ -130,6 +134,28 @@ function BookingHistory() {
               render: (data) => (
                 <Tag color={bookingStatusAsResponse(data).color}>
                   {bookingStatusAsResponse(data).level}
+                </Tag>
+              ),
+              align: 'center'
+            },
+            {
+              key: 'total_price',
+              title: 'Total Price',
+              dataIndex: 'total_price',
+              render: (data) => (
+                <span style={{ fontWeight: '600' }}>
+                  {data ? `$${data}` : 'N/A'}
+                </span>
+              ),
+              align: 'center'
+            },
+            {
+              key: 'payment_status',
+              title: 'Payment',
+              dataIndex: 'payment_status',
+              render: (data) => (
+                <Tag color={data === 'paid' ? 'green' : 'orange'}>
+                  {data ? data.toUpperCase() : 'UNPAID'}
                 </Tag>
               ),
               align: 'center'

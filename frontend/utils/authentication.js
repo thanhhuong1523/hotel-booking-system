@@ -16,6 +16,7 @@ const APP_REFRESH_TOKEN = 'BRF-REFRESH-TOKEN';
  * @returns if session user return user object otherwise return null
  */
 export const getSessionUser = () => {
+  if (typeof window === 'undefined') return null;
   const userStr = localStorage.getItem(APP_USER_STORAGE);
 
   if (userStr) {
@@ -29,6 +30,7 @@ export const getSessionUser = () => {
  * @returns if session user return access-token otherwise return null
  */
 export const getSessionToken = () => {
+  if (typeof window === 'undefined') return null;
   const tokenStr = localStorage.getItem(APP_ACCESS_TOKEN);
 
   if (tokenStr) {
@@ -42,6 +44,7 @@ export const getSessionToken = () => {
  * @returns if session user return refresh-token otherwise return null
  */
 export const getRefreshToken = () => {
+  if (typeof window === 'undefined') return null;
   const tokenStr = localStorage.getItem(APP_REFRESH_TOKEN);
 
   if (tokenStr) {

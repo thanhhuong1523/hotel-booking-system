@@ -27,7 +27,8 @@
     "ws": "^8.20.0"
   },
   "scripts": {
-    "start": "set PORT=3033 && react-scripts start",
+    "start": "PORT=3033 react-scripts start",
+    "dev": "PORT=3033 react-scripts start",
     "build": "react-scripts build",
     "lint": "eslint .",
     "test": "react-scripts test",

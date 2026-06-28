@@ -29,7 +29,11 @@ const useFetchData = (url, fetchAgain) => {
         }
       })
       .catch((err) => {
-        setError(err?.response?.data?.result?.error || 'Sorry! Something went wrong. App server error');
+        const errorMsg = err?.response?.data?.result?.error?.message ||
+                         (typeof err?.response?.data?.result?.error === 'string' ? err?.response?.data?.result?.error : null) ||
+                         err?.message ||
+                         'Sorry! Something went wrong. App server error';
+        setError(errorMsg);
         setLoading(false);
       });
   }, [url, fetchAgain, reFetch]);

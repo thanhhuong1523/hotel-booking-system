@@ -10,7 +10,7 @@
 const router = require('express').Router();
 const { isAuthenticatedUser, isBlocked, isAdmin } = require('../middleware/app.authentication');
 const {
-  placedBookingOrder, getBookingOrderByUserId, cancelSelfBookingOrder, getBookingOrderForAdmin, updatedBookingOrderByAdmin
+  placedBookingOrder, getBookingOrderByUserId, cancelSelfBookingOrder, getBookingOrderForAdmin, updatedBookingOrderByAdmin, checkoutBookingOrder
 } = require('../controllers/booking.controllers');
 
 // route for placed a room booking order
@@ -23,5 +23,6 @@ router.route('/cancel-booking-order/:id').put(isAuthenticatedUser, isBlocked, ca
 // routes for admin get all bookings list, rejected, approved and checkout placed order
 router.route('/get-all-booking-orders').get(isAuthenticatedUser, isBlocked, isAdmin, getBookingOrderForAdmin);
 router.route('/updated-booking-order/:id').put(isAuthenticatedUser, isBlocked, isAdmin, updatedBookingOrderByAdmin);
+router.route('/checkout-booking/:id').put(isAuthenticatedUser, isBlocked, checkoutBookingOrder);
 
 module.exports = router;
