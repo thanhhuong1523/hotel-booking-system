@@ -30,6 +30,15 @@
     "consistent-return": "off",
     "linebreak-style": "off",
     "func-names": "off",
-    "camelcase": "off"
+    "camelcase": "off",
+
+    // ===== Thêm các rule này =====
+    "no-throw-literal": "off",
+    "class-methods-use-this": "off",
+    "object-curly-newline": "off",
+    "object-property-newline": "off",
+    "import/order": "off",
+    "no-unused-vars": "warn",
+    "no-console": "off"
   }
 }

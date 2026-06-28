@@ -14,6 +14,12 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 const usersSchema = new mongoose.Schema({
+  hotelId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Hotel',
+    required: [true, 'Hotel ID is required'],
+    index: true
+  },
   userName: {
     type: String,
     trim: true,
@@ -43,7 +49,8 @@ const usersSchema = new mongoose.Schema({
     select: false
   },
   avatar: {
-    type: String
+    type: String,
+    default: '/avatar.png'
   },
   gender: {
     type: String,
@@ -83,6 +90,16 @@ const usersSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
+}, {
+  timestamps: true
+});
+
+// Replace spaces with dashes in userName before saving
+usersSchema.pre('save', function (next) {
+  if (this.userName) {
+    this.userName = this.userName.replace(/\s/g, '-');
+  }
+  next();
 });
 
 // Replace spaces with dashes in userName before saving
@@ -150,5 +167,10 @@ usersSchema.methods.getEmailVerificationToken = function () {
   this.emailVerificationExpire = Date.now() + 15 * 60 * 1000;
   return verificationToken;
 };
+
+// Indexes cho performance
+usersSchema.index({ hotelId: 1, email: 1 });
+usersSchema.index({ hotelId: 1, userName: 1 });
+usersSchema.index({ role: 1 });
 
 module.exports = mongoose.model('Users', usersSchema);
