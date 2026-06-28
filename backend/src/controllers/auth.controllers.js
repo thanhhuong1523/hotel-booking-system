@@ -1,3 +1,4 @@
+/* eslint-disable quotes */
 /* eslint-disable global-require */
 const authService = require('../services/auth.service');
 const { errorResponse } = require('../configs/app.response');
@@ -15,10 +16,20 @@ class AuthController {
 
   async loginUser(req, res) {
     try {
+      console.log("1. Vào controller");
+
       const user = await authService.login(req);
+      console.log("2. Login service OK");
+
       loginResponse(res, user);
+      console.log("3. Login response OK");
     } catch (error) {
-      res.status(error.status || 500).json(error.response || errorResponse(2, 'SERVER SIDE ERROR', error));
+      console.error("LOGIN ERROR:", error);
+      console.error(error.stack);
+
+      res.status(error.status || 500).json(
+        error.response || errorResponse(2, "SERVER SIDE ERROR", error)
+      );
     }
   }
 

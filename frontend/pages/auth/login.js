@@ -1,12 +1,3 @@
-/**
- * @name Hotel Room Booking System
- * @author Md. Samiur Rahman (Mukul)
- * @description Hotel Room Booking and Management System Software ~ Developed By Md. Samiur Rahman (Mukul)
- * @copyright ©2023 ― Md. Samiur Rahman (Mukul). All rights reserved.
- * @version v0.0.1
- *
- */
-
 import { LockOutlined, MailOutlined } from '@ant-design/icons';
 import {
   Button, Checkbox, Form, Input
@@ -32,12 +23,21 @@ function Login() {
           form.resetFields();
           window.location.href = '/profile?tab=my-profile';
         } else {
-          notificationWithIcon('error', 'ERROR', 'Sorry! Something went wrong. App server error');
+          notificationWithIcon(
+            'error', 
+            'ERROR', 
+            'Sorry! Something went wrong. App server error'
+          );
         }
       })
       .catch((err) => {
         setLoading(false);
-        notificationWithIcon('error', 'ERROR', err?.response?.data?.result?.error?.message || err?.response?.data?.result?.error || 'Sorry! Something went wrong. App server error');
+        notificationWithIcon(
+          'error', 
+          'ERROR', 
+          typeof err === 'string'
+      ? err
+      : err?.message || 'Sorry! Something went wrong.');
       });
   };
 
